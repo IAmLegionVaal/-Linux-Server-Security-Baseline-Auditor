@@ -1,53 +1,58 @@
 # Linux Server Security Baseline Auditor
 
-A read-only Bash toolkit for reviewing the security posture of Linux servers and producing escalation-ready evidence.
+A Linux support toolkit for auditing server security posture and applying selected guarded baseline repairs.
 
-## Scope
-
-- SSH daemon configuration and root-login policy
-- Password-authentication and empty-password settings
-- Firewall status for UFW, firewalld, or nftables
-- SELinux or AppArmor status
-- Privileged groups and sudo configuration
-- World-writable files in selected system paths
-- Listening services and exposed ports
-- Failed authentication events
-- Automatic-update configuration
-- Time synchronisation and audit service status
-- Text and JSON summary reports
-
-## Usage
+## Audit script
 
 ```bash
 chmod +x src/linux_security_baseline_audit.sh
 sudo ./src/linux_security_baseline_audit.sh
 ```
 
-Optional output path:
+The audit reviews SSH policy, firewall state, SELinux or AppArmor, privileged groups, sudo configuration, exposed services, failed authentication, automatic updates, time synchronisation and audit services.
+
+## Repair script
+
+Preview configuration-permission repair:
 
 ```bash
-sudo ./src/linux_security_baseline_audit.sh --output /tmp/security-audit
+chmod +x src/linux_security_baseline_repair.sh
+sudo ./src/linux_security_baseline_repair.sh --fix-permissions --dry-run
 ```
 
-## Safety
+Repair SSH and sudo configuration permissions:
 
-The script is diagnostic-only. It does not harden SSH, modify firewall rules, change users, install packages, or edit security policy.
+```bash
+sudo ./src/linux_security_baseline_repair.sh --fix-permissions
+```
 
-## Interpretation
+Enable an installed audit or time service:
 
-Findings are evidence for technician review, not automatic proof of compromise or non-compliance. Validate every deviation against business requirements, distribution defaults, and approved security policy.
+```bash
+sudo ./src/linux_security_baseline_repair.sh --enable-audit
+sudo ./src/linux_security_baseline_repair.sh --enable-time-sync
+```
 
-## Validation checklist
+Create a validated SSH policy drop-in:
 
-- Test on Ubuntu/Debian and one RHEL-compatible system
-- Test with OpenSSH absent and present
-- Confirm all checks fail gracefully when tools are unavailable
-- Review output for secrets before sharing
-- Compare findings with the organisation's approved baseline
+```bash
+sudo ./src/linux_security_baseline_repair.sh \
+  --ssh-root-login no \
+  --ssh-password-auth no
+```
 
-## Professional value
+## What the repair does
 
-Demonstrates Linux security support, least-privilege thinking, safe evidence collection, and the ability to translate technical findings into actionable escalation notes.
+- Corrects standard permissions on SSH and sudo configuration files.
+- Validates sudo configuration with `visudo`.
+- Can enable installed audit and time-synchronisation services.
+- Can create a managed SSH drop-in, validate it with `sshd -t`, and reload SSH.
+- Backs up an existing managed SSH drop-in before replacement.
+- Supports confirmation prompts, dry-run, logs and post-repair verification.
+
+## Safety and limitations
+
+SSH policy changes can lock out remote users. Confirm working key-based access and an emergency console path before disabling password authentication. Firewall policy and user accounts are not changed by this tool.
 
 ## Author
 
